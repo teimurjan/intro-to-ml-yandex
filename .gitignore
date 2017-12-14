@@ -2,3 +2,5 @@ result.csv
 .vscode
 virtualenv
 .idea
+.DS_Store
+__pycache___
