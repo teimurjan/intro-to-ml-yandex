@@ -1,6 +1,8 @@
-import numpy as np
+import os
 import pandas
-from matplotlib import pyplot as plt
+import numpy as np
+
+from settings import BASE_DIR
 
 
 def get_personal_columns(column_name):
@@ -20,7 +22,7 @@ def replace_with_mean(columns, X):
 
 
 def replace_with_bag_of_words(X, column='hero', file='heroes.csv'):
-  words_df = pandas.read_csv('data/dictionaries/{}'.format(file))
+  words_df = pandas.read_csv(os.path.join(BASE_DIR, 'data/dictionaries/{}'.format(file)))
   X_words = np.zeros((X.shape[0], len(words_df)))
   for i, match_id in enumerate(X.index):
     for p in range(1, 6):
@@ -33,27 +35,23 @@ def replace_with_bag_of_words(X, column='hero', file='heroes.csv'):
   return pandas.concat([X_cleaned, X_words], axis=1)
 
 
-def prepare_data(X):
-  X_prepared = X.drop(['start_time', 'lobby_type', 'first_blood_time', 'first_blood_player1', 'first_blood_player2'], axis=1)
-  X_prepared = X_prepared.fillna(0)
-  return replace_with_mean(['gold', 'xp', 'lh', 'kills', 'deaths', 'level', 'items'], X_prepared)
-
-
-def plot(estimators, scores):
-  plt.plot(estimators, scores)
-  plt.xlabel('n_estimators')
-  estimators30_score = scores[estimators.index(30)]
-  plt.scatter(30, estimators30_score, marker='o', c='r')
-  plt.annotate('Score with 30 estimators is {:0.3f}'.format(estimators30_score), (30, estimators30_score))
-  plt.ylabel('score')
-  plt.show()
-
-
-def get_data(test=False, sample=True, frac=0.5):
-  data = pandas.read_csv('data/features{}.csv'.format('_test' if test else ''), index_col='match_id')
+def get_data(test=False, sample=True, frac=0.5, fillna=True):
+  file_path = os.path.join(BASE_DIR, 'data/features{}.csv').format('_test' if test else '')
+  data = pandas.read_csv(file_path, index_col='match_id')
+  if not test:
+    data.drop(['duration',
+               'tower_status_radiant',
+               'tower_status_dire',
+               'barracks_status_radiant',
+               'barracks_status_dire'
+               ], axis=1, inplace=True)
+  if fillna:
+    data = data.fillna(0)
   return data if not sample else data.sample(frac=frac)
 
 
-def get_skips_df(X):
-  cols_with_skips = X.loc[:, X.isnull().any()]
-  return cols_with_skips.apply(lambda c: c.isnull().sum()).to_frame("skips_count")
+def prepare_data(X):
+  X_prepared = X.drop(
+    ['start_time', 'lobby_type', 'first_blood_time', 'first_blood_player1', 'first_blood_player2'], axis=1
+  )
+  return replace_with_mean(['gold', 'xp', 'lh', 'kills', 'deaths', 'level', 'items'], X_prepared)

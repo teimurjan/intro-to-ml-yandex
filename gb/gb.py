@@ -4,7 +4,8 @@ import pandas
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import KFold, cross_val_score
 
-from utils import plot, get_data, replace_with_bag_of_words, prepare_data
+import utils
+import gb_utils
 
 
 def make_kaggle_prediction(X_train, y_train, X_test):
@@ -27,16 +28,16 @@ def make_coursera_testing(X_train, y_train):
     score = cross_val_score(estimator=clf, cv=cv, X=X_train, y=y_train, scoring='roc_auc').mean()
     cross_val_times.append(datetime.now() - start_time)
     scores.append(score)
-  plot(estimators, scores)
+  gb_utils.plot(estimators, scores)
 
 
 def main():
-  train_data = get_data()
-  test_data = get_data(test=True, sample=False)
+  train_data = utils.get_data()
+  test_data = utils.get_data(test=True, sample=False)
   y = train_data['radiant_win']
-  X_train = train_data[train_data.columns.intersection(test_data.columns.values)]
-  X_train = replace_with_bag_of_words(prepare_data(X_train))
-  X_test = replace_with_bag_of_words(prepare_data(test_data))
+  X_train = train_data.loc[:, train_data.columns != 'radiant_win']
+  X_train = utils.replace_with_bag_of_words(utils.prepare_data(X_train))
+  X_test = utils.replace_with_bag_of_words(utils.prepare_data(test_data))
   make_coursera_testing(X_train, y)
 
 
