@@ -4,3 +4,5 @@ virtualenv
 .idea
 .DS_Store
 __pycache___
+*.zip
+.ipynb_checkpoints
